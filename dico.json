@@ -1,0 +1,50 @@
+{
+    "evenements": {
+        "1": {
+            "titre": "Entra\u00c3\u00aenement Lakers",
+            "date": "2025-11-20",
+            "heure_debut": "09:00",
+            "heure_fin": "11:00",
+            "salle": "Staples Center",
+            "participants": [
+                "LeBron James",
+                "Anthony Davis"
+            ]
+        },
+        "2": {
+            "titre": "Conf\u00c3\u00a9rence de presse Warriors",
+            "date": "2025-11-20",
+            "heure_debut": "13:00",
+            "heure_fin": "14:00",
+            "salle": "Chase Center",
+            "participants": [
+                "Stephen Curry",
+                "Draymond Green"
+            ]
+        },
+        "3": {
+            "titre": "tesst",
+            "date": "2020-22-22",
+            "heure_debut": "22:22",
+            "heure_fin": "22:22",
+            "salle": "",
+            "participants": []
+        }
+    },
+    "participants": {
+        "LeBron James": [
+            1
+        ],
+        "Anthony Davis": [
+            1
+        ],
+        "Stephen Curry": [
+            2
+        ],
+        "Draymond Green": [
+            2
+        ],
+        "Kevin Durant": [],
+        "Giannis Antetokounmpo": []
+    }
+}

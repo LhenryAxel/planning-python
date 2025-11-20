@@ -20,7 +20,6 @@ def charger_donnees():
 
     return donnees
 
-
 def sauvegarder_donnees(donnees):
     with open("dico.json", "w", encoding="utf-8") as f:
         json.dump(donnees, f, indent=4, ensure_ascii=False)
@@ -143,7 +142,7 @@ def ajouter_participant(dico):
     if nom not in participants:
         participants[nom] = []
     if evenement_id not in participants[nom]:
-        participants[nom].append(evement_id)
+        participants[nom].append(evenement_id)
 
     sauvegarder_donnees(dico)
 
@@ -217,8 +216,7 @@ def retirer_participant(dico):
 
 # Affichage avec pagination des participants 
 
-def afficher_participants_avec_pagination(dico, titre="Liste des participants",
-                                          message_selection="Entrez le numéro du participant"):
+def afficher_participants_avec_pagination(dico, titre="Liste des participants", message_selection="Entrez le numéro du participant"):
     participants_par_page = 10
     participants_noms = sorted(dico["participants"].keys())
 
@@ -242,13 +240,16 @@ def afficher_participants_avec_pagination(dico, titre="Liste des participants",
         for numero, nom in participants_list[debut:fin]:
             print(f"{Couleurs.VERT}{numero}{Couleurs.RESET} - {nom}")
 
-        print(f"\n{Couleurs.CYAN}Page {page_actuelle}/{total_pages}{Couleurs.RESET}")
+        options = f"{Couleurs.JAUNE}\n{message_selection}"
+        
+        # Afficher les options de navigation uniquement s'il y a plusieurs pages
+        if total_pages > 1:
 
-        options = (f"{Couleurs.JAUNE}\n{message_selection}, "
-                   f"{Couleurs.BLEU}'<'{Couleurs.JAUNE} pour page précédente, "
-                   f"{Couleurs.BLEU}'>'{Couleurs.JAUNE} pour page suivante, "
-                   f"ou {Couleurs.ROUGE}'q'{Couleurs.JAUNE} pour quitter : "
-                   f"{Couleurs.RESET}")
+            print(f"\n{Couleurs.CYAN}Page {page_actuelle}/{total_pages}{Couleurs.RESET}")
+            options += f", {Couleurs.BLEU}'<'{Couleurs.JAUNE} pour page précédente"
+            options += f", {Couleurs.BLEU}'>'{Couleurs.JAUNE} pour page suivante"
+        
+        options += f", ou {Couleurs.ROUGE}'q'{Couleurs.JAUNE} pour quitter : {Couleurs.RESET}"
 
         choix = input(options)
 
@@ -358,7 +359,6 @@ def trouver_creneau_commun(dico):
         total_participants = len(participants_list)
         total_pages = (total_participants + participants_par_page - 1) // participants_par_page
 
-        clear_terminal()
         print(f"{Couleurs.GRAS}{Couleurs.MAGENTA}Recherche d'un créneau commun{Couleurs.RESET}\n")
 
         # Affichage des participants déjà choisis
@@ -382,8 +382,12 @@ def trouver_creneau_commun(dico):
         print(f"\n{Couleurs.CYAN}Page {page_actuelle}/{total_pages}{Couleurs.RESET}")
 
         options = f"{Couleurs.JAUNE}\nEntrez le numéro d'un participant pour l'ajouter"
-        options += f", {Couleurs.BLEU}'<'{Couleurs.JAUNE} pour page précédente"
-        options += f", {Couleurs.BLEU}'>'{Couleurs.JAUNE} pour page suivante"
+        
+        # Afficher les options de navigation uniquement s'il y a plusieurs pages
+        if total_pages > 1:
+            options += f", {Couleurs.BLEU}'<'{Couleurs.JAUNE} pour page précédente"
+            options += f", {Couleurs.BLEU}'>'{Couleurs.JAUNE} pour page suivante"
+        
         options += f", {Couleurs.VERT}'0'{Couleurs.JAUNE} pour lancer la recherche"
         options += f", ou {Couleurs.ROUGE}'q'{Couleurs.JAUNE} pour quitter : {Couleurs.RESET}"
 
@@ -396,14 +400,13 @@ def trouver_creneau_commun(dico):
             page_actuelle = 1 if page_actuelle == total_pages else page_actuelle + 1
             continue
         elif choix == '0':
+            clear_terminal()
             # au moins 2 participants
             if len(participants_selectionnes) < 2:
                 print(f"{Couleurs.ROUGE}Vous devez sélectionner au moins 2 participants.{Couleurs.RESET}")
-                input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
                 continue
 
             # Demande durée
-            clear_terminal()
             duree_heure = input(
                 f"{Couleurs.JAUNE}Entrez la durée du créneau recherché en heures (ex: 1.5) : {Couleurs.RESET}"
             )
@@ -414,7 +417,19 @@ def trouver_creneau_commun(dico):
                 )
             duree_heure = float(duree_heure)
 
-            print(f"{Couleurs.CYAN}Recherche d'un créneau commun pour :{Couleurs.RESET}")
+            # Demande de la date de départ
+            date_recherche = None
+            while date_recherche is None:
+                date_input = input(
+                    f"{Couleurs.JAUNE}Entrez la date de recherche (format JJ/MM/AAAA) : {Couleurs.RESET}"
+                )
+                try:
+                    date_recherche = datetime.datetime.strptime(date_input, '%d/%m/%Y').date()
+                except ValueError:
+                    print(f"{Couleurs.ROUGE}Format de date invalide. Utilisez JJ/MM/AAAA (ex: 25/12/2025){Couleurs.RESET}")
+
+            clear_terminal()
+            print(f"\n{Couleurs.CYAN}Recherche d'un créneau commun pour :{Couleurs.RESET}")
             for nom in participants_selectionnes:
                 print(f"  - {nom}")
 
@@ -442,174 +457,198 @@ def trouver_creneau_commun(dico):
                 return f"{h:02d}:{m:02d}"
 
             duree_minutes = int(duree_heure * 60)
-            heure_debut_matin = 9 * 60
-            heure_fin_matin = 12 * 60 + 30
-            heure_debut_aprem = 14 * 60
-            heure_fin_aprem = 18 * 60
+            heure_debut_journee = 9 * 60  # 9h
+            heure_fin_journee = 18 * 60   # 18h
 
-            date_actuelle = datetime.datetime.now().date()
             creneau_trouve = None
+            date_test = date_recherche
 
-            # On teste sur 30 jours
-            dates_a_tester = [
-                (date_actuelle + datetime.timedelta(days=i)).strftime('%Y-%m-%d') for i in range(31)
-            ]
+            # Boucle de recherche jour par jour
+            while creneau_trouve is None:
+                date_test_str = date_test.strftime('%Y-%m-%d')
+                events_du_jour = [e for e in evenements_participants if e['date'] == date_test_str]
 
-            for date_test in dates_a_tester:
-                events_du_jour = [e for e in evenements_participants if e['date'] == date_test]
-
-                intervalles_occupes_matin = []
-                intervalles_occupes_aprem = []
-
+                # Récupérer tous les intervalles occupés de la journée
+                intervalles_occupes = []
                 for event in events_du_jour:
                     debut = heure_en_minutes(event['heure_debut'])
                     fin = heure_en_minutes(event['heure_fin'])
+                    intervalles_occupes.append((debut, fin))
 
-                    if fin <= heure_fin_matin:
-                        intervalles_occupes_matin.append((debut, fin))
-                    elif debut >= heure_debut_aprem:
-                        intervalles_occupes_aprem.append((debut, fin))
-                    else:
-                        if debut < heure_fin_matin:
-                            intervalles_occupes_matin.append((debut, min(fin, heure_fin_matin)))
-                        if fin > heure_debut_aprem:
-                            intervalles_occupes_aprem.append((max(debut, heure_debut_aprem), fin))
+                intervalles_occupes.sort()
 
-                intervalles_occupes_matin.sort()
-                intervalles_occupes_aprem.sort()
-
-                # Matin
-                if not intervalles_occupes_matin:
-                    if heure_fin_matin - heure_debut_matin >= duree_minutes:
+                # Chercher un créneau libre dans la journée
+                if not intervalles_occupes:
+                    # Journée complètement libre
+                    if heure_fin_journee - heure_debut_journee >= duree_minutes:
                         creneau_trouve = {
-                            'date': date_test,
-                            'heure_debut': minutes_en_heure(heure_debut_matin),
-                            'heure_fin': minutes_en_heure(heure_debut_matin + duree_minutes)
+                            'date': date_test_str,
+                            'heure_debut': minutes_en_heure(heure_debut_journee),
+                            'heure_fin': minutes_en_heure(heure_debut_journee + duree_minutes)
                         }
-                        break
                 else:
-                    premier_event_debut = intervalles_occupes_matin[0][0]
-                    if premier_event_debut - heure_debut_matin >= duree_minutes:
+                    # Vérifier avant le premier événement
+                    premier_event_debut = intervalles_occupes[0][0]
+                    if premier_event_debut - heure_debut_journee >= duree_minutes:
                         creneau_trouve = {
-                            'date': date_test,
-                            'heure_debut': minutes_en_heure(heure_debut_matin),
-                            'heure_fin': minutes_en_heure(heure_debut_matin + duree_minutes)
+                            'date': date_test_str,
+                            'heure_debut': minutes_en_heure(heure_debut_journee),
+                            'heure_fin': minutes_en_heure(heure_debut_journee + duree_minutes)
                         }
-                        break
 
-                    for i in range(len(intervalles_occupes_matin) - 1):
-                        fin_event_actuel = intervalles_occupes_matin[i][1]
-                        debut_event_suivant = intervalles_occupes_matin[i + 1][0]
+                    # Vérifier entre les événements
+                    if not creneau_trouve:
+                        for i in range(len(intervalles_occupes) - 1):
+                            fin_event_actuel = intervalles_occupes[i][1]
+                            debut_event_suivant = intervalles_occupes[i + 1][0]
 
-                        if debut_event_suivant - fin_event_actuel >= duree_minutes:
+                            if debut_event_suivant - fin_event_actuel >= duree_minutes:
+                                creneau_trouve = {
+                                    'date': date_test_str,
+                                    'heure_debut': minutes_en_heure(fin_event_actuel),
+                                    'heure_fin': minutes_en_heure(fin_event_actuel + duree_minutes)
+                                }
+                                break
+
+                    # Vérifier après le dernier événement
+                    if not creneau_trouve:
+                        dernier_event_fin = intervalles_occupes[-1][1]
+                        if heure_fin_journee - dernier_event_fin >= duree_minutes:
                             creneau_trouve = {
-                                'date': date_test,
-                                'heure_debut': minutes_en_heure(fin_event_actuel),
-                                'heure_fin': minutes_en_heure(fin_event_actuel + duree_minutes)
+                                'date': date_test_str,
+                                'heure_debut': minutes_en_heure(dernier_event_fin),
+                                'heure_fin': minutes_en_heure(dernier_event_fin + duree_minutes)
                             }
-                            break
 
-                    if creneau_trouve:
-                        break
+                # Si aucun créneau trouvé ce jour, proposer le jour suivant
+                if not creneau_trouve:
+                    print(f"\n{Couleurs.ROUGE}✗ Aucun créneau disponible le {date_test.strftime('%d/%m/%Y')}{Couleurs.RESET}")
+                    reponse = input(f"{Couleurs.JAUNE}Voulez-vous chercher le jour suivant ? (Entrée pour oui, 'q' pour quitter) : {Couleurs.RESET}")
+                    if reponse.lower() == 'q':
+                        return
+                    date_test = date_test + datetime.timedelta(days=1)
 
-                    dernier_event_fin = intervalles_occupes_matin[-1][1]
-                    if heure_fin_matin - dernier_event_fin >= duree_minutes:
-                        creneau_trouve = {
-                            'date': date_test,
-                            'heure_debut': minutes_en_heure(dernier_event_fin),
-                            'heure_fin': minutes_en_heure(dernier_event_fin + duree_minutes)
-                        }
-                        break
-
-                # Après-midi
-                if not intervalles_occupes_aprem:
-                    if heure_fin_aprem - heure_debut_aprem >= duree_minutes:
-                        creneau_trouve = {
-                            'date': date_test,
-                            'heure_debut': minutes_en_heure(heure_debut_aprem),
-                            'heure_fin': minutes_en_heure(heure_debut_aprem + duree_minutes)
-                        }
-                        break
-                else:
-                    premier_event_debut = intervalles_occupes_aprem[0][0]
-                    if premier_event_debut - heure_debut_aprem >= duree_minutes:
-                        creneau_trouve = {
-                            'date': date_test,
-                            'heure_debut': minutes_en_heure(heure_debut_aprem),
-                            'heure_fin': minutes_en_heure(heure_debut_aprem + duree_minutes)
-                        }
-                        break
-
-                    for i in range(len(intervalles_occupes_aprem) - 1):
-                        fin_event_actuel = intervalles_occupes_aprem[i][1]
-                        debut_event_suivant = intervalles_occupes_aprem[i + 1][0]
-
-                        if debut_event_suivant - fin_event_actuel >= duree_minutes:
-                            creneau_trouve = {
-                                'date': date_test,
-                                'heure_debut': minutes_en_heure(fin_event_actuel),
-                                'heure_fin': minutes_en_heure(fin_event_actuel + duree_minutes)
-                            }
-                            break
-
-                    if creneau_trouve:
-                        break
-
-                    dernier_event_fin = intervalles_occupes_aprem[-1][1]
-                    if heure_fin_aprem - dernier_event_fin >= duree_minutes:
-                        creneau_trouve = {
-                            'date': date_test,
-                            'heure_debut': minutes_en_heure(dernier_event_fin),
-                            'heure_fin': minutes_en_heure(dernier_event_fin + duree_minutes)
-                        }
-                        break
-
+            # Créneau trouvé - affichage
             print(f"\n{Couleurs.GRAS}Résultat de la recherche :{Couleurs.RESET}")
-            if creneau_trouve:
-                print(f"{Couleurs.VERT}✓ Créneau disponible trouvé !{Couleurs.RESET}")
-                print(f"{Couleurs.CYAN}Date :{Couleurs.RESET} {creneau_trouve['date']}")
-                print(f"{Couleurs.CYAN}Horaire :{Couleurs.RESET} {creneau_trouve['heure_debut']} - {creneau_trouve['heure_fin']}")
-                print(f"{Couleurs.CYAN}Durée :{Couleurs.RESET} {duree_heure} h")
-                print(f"{Couleurs.CYAN}Participants :{Couleurs.RESET} {len(participants_selectionnes)} personne(s)")
+            print(f"{Couleurs.VERT}✓ Créneau disponible trouvé !{Couleurs.RESET}")
+            date_affichage = datetime.datetime.strptime(creneau_trouve['date'], '%Y-%m-%d').strftime('%d/%m/%Y')
+            print(f"{Couleurs.CYAN}Date :{Couleurs.RESET} {date_affichage}")
+            print(f"{Couleurs.CYAN}Horaire :{Couleurs.RESET} {creneau_trouve['heure_debut']} - {creneau_trouve['heure_fin']}")
+            print(f"{Couleurs.CYAN}Durée :{Couleurs.RESET} {duree_heure} h")
+            print(f"{Couleurs.CYAN}Participants :{Couleurs.RESET} {len(participants_selectionnes)} personne{'s' if len(participants_selectionnes) > 1 else ''}")
 
-                # salles dispo (optionnel, dépend du JSON)
-                salles_disponibles = []
-                for id_salle, details_salle in dico["salles"].items():
-                    if details_salle['capacite'] >= len(participants_selectionnes):
-                        salle_occupee = False
-                        for id_event, details_event in dico["evenements"].items():
-                            if (details_event.get('salle') == id_salle and
-                                details_event['date'] == creneau_trouve['date']):
-                                event_debut = heure_en_minutes(details_event['heure_debut'])
-                                event_fin = heure_en_minutes(details_event['heure_fin'])
-                                creneau_debut = heure_en_minutes(creneau_trouve['heure_debut'])
-                                creneau_fin = heure_en_minutes(creneau_trouve['heure_fin'])
-                                if event_debut < creneau_fin and event_fin > creneau_debut:
-                                    salle_occupee = True
-                                    break
-                        if not salle_occupee:
-                            salles_disponibles.append({
-                                'id': id_salle,
-                                'nom': details_salle['nom'],
-                                'capacite': details_salle['capacite']
-                            })
+            # Recherche de salles disponibles
+            salles_disponibles = []
+            for id_salle, details_salle in dico["salles"].items():
+                if details_salle['capacite'] >= len(participants_selectionnes):
+                    salle_occupee = False
+                    for id_event, details_event in dico["evenements"].items():
+                        if (details_event.get('salle') == id_salle and
+                            details_event['date'] == creneau_trouve['date']):
+                            event_debut = heure_en_minutes(details_event['heure_debut'])
+                            event_fin = heure_en_minutes(details_event['heure_fin'])
+                            creneau_debut = heure_en_minutes(creneau_trouve['heure_debut'])
+                            creneau_fin = heure_en_minutes(creneau_trouve['heure_fin'])
+                            if event_debut < creneau_fin and event_fin > creneau_debut:
+                                salle_occupee = True
+                                break
+                    if not salle_occupee:
+                        salles_disponibles.append({
+                            'id': id_salle,
+                            'nom': details_salle['nom'],
+                            'capacite': details_salle['capacite']
+                        })
 
-                if salles_disponibles:
-                    print(f"\n{Couleurs.CYAN}Salles disponibles :{Couleurs.RESET}")
-                    for salle in salles_disponibles:
-                        print(f"  - {Couleurs.VERT}{salle['nom']}{Couleurs.RESET} (capacité: {salle['capacite']} personnes)")
-                else:
-                    if dico["salles"]:
-                        print(f"\n{Couleurs.ROUGE}⚠ Aucune salle disponible pour ce créneau.{Couleurs.RESET}")
+            if salles_disponibles:
+                print(f"\n{Couleurs.CYAN}Salles disponibles :{Couleurs.RESET}")
+                for salle in salles_disponibles:
+                    print(f"  - {Couleurs.VERT}{salle['nom']}{Couleurs.RESET} (capacité: {salle['capacite']} personnes)")
             else:
-                print(f"{Couleurs.ROUGE}✗ Aucun créneau disponible trouvé dans les 30 prochains jours.{Couleurs.RESET}")
+                if dico["salles"]:
+                    print(f"\n{Couleurs.ROUGE}⚠ Aucune salle disponible pour ce créneau.{Couleurs.RESET}")
 
-            input(f"\n{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
-            return
+            # Demande de validation pour créer l'événement
+            print(f"\n{Couleurs.GRAS}Voulez-vous créer cet événement ?{Couleurs.RESET}")
+            validation = input(f"{Couleurs.JAUNE}Entrez {Couleurs.VERT}'1'{Couleurs.JAUNE} pour valider : {Couleurs.RESET}")
+            
+            if validation == '1':
+                # Créer l'événement
+                titre = input(f"{Couleurs.JAUNE}Titre de l'événement : {Couleurs.RESET}")
+                
+                # Choix de la salle si disponible
+                salle_choisie = ""
+                if salles_disponibles:
+                    print(f"\n{Couleurs.CYAN}Choisir une salle (laisser vide pour aucune) :{Couleurs.RESET}")
+                    for idx, salle in enumerate(salles_disponibles, start=1):
+                        print(f"{idx} - {salle['nom']}")
+                    choix_salle = input(f"{Couleurs.JAUNE}Votre choix : {Couleurs.RESET}")
+                    if choix_salle.isdigit() and 1 <= int(choix_salle) <= len(salles_disponibles):
+                        salle_choisie = salles_disponibles[int(choix_salle) - 1]['id']
+
+                # Création de l'événement
+                evenement_id = str(len(dico["evenements"]) + 1)
+                dico["evenements"][evenement_id] = {
+                    "titre": titre,
+                    "date": creneau_trouve['date'],
+                    "heure_debut": creneau_trouve['heure_debut'],
+                    "heure_fin": creneau_trouve['heure_fin'],
+                    "salle": salle_choisie,
+                    "participants": participants_selectionnes.copy()
+                }
+
+                # Mise à jour de la liste des participants
+                for nom in participants_selectionnes:
+                    if nom not in dico["participants"]:
+                        dico["participants"][nom] = []
+                    dico["participants"][nom].append(evenement_id)
+
+                sauvegarder_donnees(dico)
+                print(f"\n{Couleurs.VERT}✓ Événement créé avec succès ! ID : {evenement_id}{Couleurs.RESET}")
+                input(f"\n{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
+                return
+            else:
+                # Confirmation d'annulation
+                confirmation = input(f"{Couleurs.ROUGE}Êtes-vous sûr de ne pas vouloir créer cet événement ? (Entrée pour confirmer, '1' pour créer) : {Couleurs.RESET}")
+                if confirmation == '1':
+                    # Retour à la création
+                    titre = input(f"{Couleurs.JAUNE}Titre de l'événement : {Couleurs.RESET}")
+                    
+                    salle_choisie = ""
+                    if salles_disponibles:
+                        print(f"\n{Couleurs.CYAN}Choisir une salle (laisser vide pour aucune) :{Couleurs.RESET}")
+                        for idx, salle in enumerate(salles_disponibles, start=1):
+                            print(f"{idx} - {salle['nom']}")
+                        choix_salle = input(f"{Couleurs.JAUNE}Votre choix : {Couleurs.RESET}")
+                        if choix_salle.isdigit() and 1 <= int(choix_salle) <= len(salles_disponibles):
+                            salle_choisie = salles_disponibles[int(choix_salle) - 1]['id']
+
+                    evenement_id = str(len(dico["evenements"]) + 1)
+                    dico["evenements"][evenement_id] = {
+                        "titre": titre,
+                        "date": creneau_trouve['date'],
+                        "heure_debut": creneau_trouve['heure_debut'],
+                        "heure_fin": creneau_trouve['heure_fin'],
+                        "salle": salle_choisie,
+                        "participants": participants_selectionnes.copy()
+                    }
+
+                    for nom in participants_selectionnes:
+                        if nom not in dico["participants"]:
+                            dico["participants"][nom] = []
+                        dico["participants"][nom].append(evenement_id)
+
+                    sauvegarder_donnees(dico)
+                    print(f"\n{Couleurs.VERT}✓ Événement créé avec succès ! ID : {evenement_id}{Couleurs.RESET}")
+                else:
+                    print(f"\n{Couleurs.JAUNE}Création annulée.{Couleurs.RESET}")
+                
+                input(f"\n{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
+                return
 
         elif choix.lower() == 'q':
             return
         else:
+            clear_terminal()
             # Ajout du participant
             for numero, nom in participants_list:
                 if choix == numero:
@@ -618,11 +657,9 @@ def trouver_creneau_commun(dico):
                     else:
                         participants_selectionnes.append(nom)
                         print(f"{Couleurs.VERT}{nom} a été ajouté à la sélection.{Couleurs.RESET}")
-                    input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
                     break
             else:
                 print(f"{Couleurs.ROUGE}Choix invalide.{Couleurs.RESET}")
-                input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
 
 def verifier_conflit_salle(dico):
     pass
@@ -656,7 +693,6 @@ def affiche_intro():
 
 if __name__ == "__main__":
     dico = charger_donnees()
-
     while True:
         clear_terminal()
         choix = affiche_intro()
@@ -673,6 +709,7 @@ if __name__ == "__main__":
         elif choix == '3':        # 3 - Affichage Agenda
             afficher_agenda(dico)
         elif choix == '4':        # 4 - Créneau Commun
+            clear_terminal()
             trouver_creneau_commun(dico)
         elif choix == '5':        # 5 - Retirer participant
             retirer_participant(dico)

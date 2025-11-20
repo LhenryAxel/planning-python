@@ -75,20 +75,17 @@ def ajouter_evenement(dico):
 
 def verifier_conflit_participant(dico, nom, nouvel_evenement_id):
     evenements = dico["evenements"]
-    participants = dico["participants"]
 
-    if nom not in participants:
-        return False
-
-    nouvel_evt = evenements[nouvel_evenement_id]  
+    nouvel_evt = evenements[nouvel_evenement_id]
     date = nouvel_evt["date"]
     debut = nouvel_evt["heure_debut"]
     fin = nouvel_evt["heure_fin"]
 
-    for evt_id in participants[nom]:   
-        evt = evenements[evt_id]
-        if evt["date"] == date:
-            # Chevauchement horaire
+    # On parcourt tous les événements existants
+    for evt_id, evt in evenements.items():
+        # si le participant est inscrit à cet événement
+        if nom in evt["participants"] and evt["date"] == date:
+            # test de chevauchement horaire
             if not (fin <= evt["heure_debut"] or debut >= evt["heure_fin"]):
                 return True
 

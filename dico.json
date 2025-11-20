@@ -18,7 +18,8 @@
             "heure_fin": "14:00",
             "salle": "Chase Center",
             "participants": [
-                "Stephen Curry"
+                "Stephen Curry",
+                "Draymond Green"
             ]
         },
         "3": {
@@ -40,16 +41,16 @@
     },
     "participants": {
         "LeBron James": [
-            1
+            "1"
         ],
         "Anthony Davis": [
-            1
+            "1"
         ],
         "Stephen Curry": [
-            2
+            "2"
         ],
         "Draymond Green": [
-            2
+            "2"
         ],
         "Kevin Durant": [],
         "Giannis Antetokounmpo": []

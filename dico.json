@@ -1,7 +1,7 @@
 {
     "evenements": {
         "1": {
-            "titre": "Entra\u00c3\u00aenement Lakers",
+            "titre": "EntraÃ®nement Lakers",
             "date": "2025-11-20",
             "heure_debut": "09:00",
             "heure_fin": "11:00",
@@ -12,14 +12,13 @@
             ]
         },
         "2": {
-            "titre": "Conf\u00c3\u00a9rence de presse Warriors",
+            "titre": "ConfÃ©rence de presse Warriors",
             "date": "2025-11-20",
             "heure_debut": "13:00",
             "heure_fin": "14:00",
             "salle": "Chase Center",
             "participants": [
-                "Stephen Curry",
-                "Draymond Green"
+                "Stephen Curry"
             ]
         },
         "3": {
@@ -28,6 +27,14 @@
             "heure_debut": "22:22",
             "heure_fin": "22:22",
             "salle": "",
+            "participants": []
+        },
+        "4": {
+            "titre": "blabla",
+            "date": "2022-12-12",
+            "heure_debut": "10:22",
+            "heure_fin": "11:00",
+            "salle": "1",
             "participants": []
         }
     },
@@ -46,5 +53,6 @@
         ],
         "Kevin Durant": [],
         "Giannis Antetokounmpo": []
-    }
+    },
+    "salles": {}
 }

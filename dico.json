@@ -44,23 +44,72 @@
             "heure_debut": "12:12",
             "heure_fin": "12:12",
             "salle": "4",
+            "participants": [
+                "Stephen Curry"
+            ]
+        },
+        "6": {
+            "titre": "kdjbskdh",
+            "date": "2020-22-22",
+            "heure_debut": "12:12",
+            "heure_fin": "12:12",
+            "salle": "2",
+            "participants": []
+        },
+        "7": {
+            "titre": "jskdhkjsd",
+            "date": "2012:12:12",
+            "heure_debut": "12:00",
+            "heure_fin": "15:00",
+            "salle": "2",
+            "participants": []
+        },
+        "8": {
+            "titre": "test",
+            "date": "2025-12-12",
+            "heure_debut": "12:10",
+            "heure_fin": "13:10",
+            "salle": "5",
             "participants": []
         }
     },
-
     "participants": {
-        "LeBron James": ["1"],
-        "Anthony Davis": ["1"],
-        "Stephen Curry": ["2"],
-        "Draymond Green": ["2"],
+        "LeBron James": [
+            "1"
+        ],
+        "Anthony Davis": [
+            "1"
+        ],
+        "Stephen Curry": [
+            "2",
+            "5"
+        ],
+        "Draymond Green": [
+            "2"
+        ],
         "Kevin Durant": [],
         "Giannis Antetokounmpo": []
     },
-
     "salles": {
-        "1": { "nom": "Staples Center", "capacite": 20000 },
-        "2": { "nom": "Chase Center", "capacite": 18000 },
-        "3": { "nom": "Salle Polyvalente", "capacite": 50 },
-        "4": { "nom": "Petite Salle", "capacite": 12 }
+        "1": {
+            "nom": "Staples Center",
+            "capacite": 20000
+        },
+        "2": {
+            "nom": "Chase Center",
+            "capacite": 18000
+        },
+        "3": {
+            "nom": "Salle Polyvalente",
+            "capacite": 50
+        },
+        "4": {
+            "nom": "Petite Salle",
+            "capacite": 12
+        },
+        "5": {
+            "nom": "Minuscule Salle",
+            "capacite": 1
+        }
     }
 }

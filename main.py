@@ -50,12 +50,40 @@ def ajouter_evenement(dico):
     clear_terminal()
     print(f"{Couleurs.GRAS}{Couleurs.MAGENTA}Création d'un nouvel événement{Couleurs.RESET}\n")
 
-    titre = input("Titre de l'événement : ")
-    date = input("Date (AAAA-MM-JJ) : ")
-    heure_debut = input("Heure de début (HH:mm) : ")
-    heure_fin = input("Heure de fin (HH:mm) : ")
-    salle = input("Salle (id ou laisser vide) : ")
+    titre = input("Titre de l'événement : ").strip()
+    while titre == "":
+        print(f"{Couleurs.ROUGE}Le titre ne peut pas être vide.{Couleurs.RESET}")
+        titre = input("Titre de l'événement : ").strip()
 
+    date = input("Date (AAAA-MM-JJ) : ").strip()
+    while not valider_date(date):
+        print(f"{Couleurs.ROUGE}Format incorrect ou date invalide. Exemple valide : 2025-06-14{Couleurs.RESET}")
+        date = input("Date (AAAA-MM-JJ) : ").strip()
+
+    heure_debut = input("Heure de début (HH:mm) : ").strip()
+    while not valider_heure(heure_debut):
+        print(f"{Couleurs.ROUGE}Heure invalide. Exemple valide : 09:00{Couleurs.RESET}")
+        heure_debut = input("Heure de début (HH:mm) : ").strip()
+
+    heure_fin = input("Heure de fin (HH:mm) : ").strip()
+    while not valider_heure(heure_fin):
+        print(f"{Couleurs.ROUGE}Heure invalide. Exemple valide : 10:30{Couleurs.RESET}")
+        heure_fin = input("Heure de fin (HH:mm) : ").strip()
+
+    # Vérifier que heure_fin > heure_debut
+    if datetime.datetime.strptime(heure_fin, "%H:%M") <= datetime.datetime.strptime(heure_debut, "%H:%M"):
+        print(f"{Couleurs.ROUGE}L'heure de fin doit être après l'heure de début.{Couleurs.RESET}")
+        input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
+        return
+
+    salle = choisir_salle(dico)
+
+    if salle and verifier_conflit_salle(dico, date, heure_debut, heure_fin, salle):
+        print(f"{Couleurs.ROUGE}Cette salle est déjà réservée sur ce créneau.{Couleurs.RESET}")
+        input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
+        return
+
+    # --- Création ---
     evenement_id = str(len(evenements) + 1)
 
     evenements[evenement_id] = {
@@ -68,6 +96,7 @@ def ajouter_evenement(dico):
     }
 
     sauvegarder_donnees(dico)
+
     print(f"\n{Couleurs.VERT}Événement créé avec succès ! ID : {evenement_id}{Couleurs.RESET}")
     input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
 
@@ -132,17 +161,26 @@ def ajouter_participant(dico):
         input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
         return
 
+    # Conflit d'agenda
     if verifier_conflit_participant(dico, nom, evenement_id):
         print(f"{Couleurs.ROUGE}Conflit d'agenda détecté. Participant déjà occupé sur ce créneau.{Couleurs.RESET}")
         input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
         return
 
+    # Capacité salle
+    if verifier_occupation_max_salle(dico, evenement_id, nb_participants_a_ajouter=1):
+        print(f"{Couleurs.ROUGE}Capacité maximale de la salle atteinte. Impossible d'ajouter ce participant.{Couleurs.RESET}")
+        input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
+        return
+
+    # Ajout dans l'événement
     evenements[evenement_id]["participants"].append(nom)
 
+    # Mise à jour du dictionnaire de participants
     if nom not in participants:
         participants[nom] = []
     if evenement_id not in participants[nom]:
-        participants[nom].append(evenement_id)
+        participants[nom].append(evenement_id) 
 
     sauvegarder_donnees(dico)
 
@@ -269,7 +307,6 @@ def afficher_participants_avec_pagination(dico, titre="Liste des participants", 
             print(f"{Couleurs.ROUGE}Choix invalide.{Couleurs.RESET}")
             input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
 
-
 def afficher_agenda(dico):
     # Sélection du participant via pagination
     participant_nom = afficher_participants_avec_pagination(
@@ -310,6 +347,10 @@ def supprimer_evenement(dico):
     print(f"{Couleurs.GRAS}{Couleurs.MAGENTA}Suppression d'un événement{Couleurs.RESET}\n")
 
     date_recherche = input("Entrez la date de l'événement à supprimer (AAAA-MM-JJ) : ")
+
+    while not valider_date(date_recherche):
+        print(f"{Couleurs.ROUGE}Format incorrect ou date invalide. Exemple valide : 2025-06-14{Couleurs.RESET}")
+        date_recherche = input("Entrez la date de l'événement à supprimer (AAAA-MM-JJ) : ").strip()
 
     # Filtrer les événements de cette date
     events_trouves = {
@@ -660,13 +701,87 @@ def trouver_creneau_commun(dico):
                     break
             else:
                 print(f"{Couleurs.ROUGE}Choix invalide.{Couleurs.RESET}")
+                input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
 
-def verifier_conflit_salle(dico):
-    pass
+#helper
+def valider_date(date_str):
+    try:
+        datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
 
+def valider_heure(heure_str):
+    try:
+        datetime.datetime.strptime(heure_str, "%H:%M")
+        return True
+    except ValueError:
+        return False
+        
+def choisir_salle(dico):
 
-def verifier_occupation_max_salle(dico):
-    pass
+    salles = dico["salles"]
+
+    if not salles:
+        print(f"{Couleurs.JAUNE}Aucune salle définie dans le système. L'événement sera sans salle.{Couleurs.RESET}")
+        input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
+        return ""
+
+    print(f"{Couleurs.CYAN}\nSalles disponibles :{Couleurs.RESET}")
+    for sid, infos in salles.items():
+        nom = infos.get("nom", f"Salle {sid}")
+        capacite = infos.get("capacite", "?")
+        print(f"{Couleurs.VERT}{sid}{Couleurs.RESET} - {nom} (capacité : {capacite})")
+
+    salle = input(
+        f"\n{Couleurs.JAUNE}Entrez l'ID de la salle à réserver (ou laissez vide pour aucune salle) : {Couleurs.RESET}"
+    ).strip()
+
+    if salle == "":
+        return ""
+
+    if salle not in salles:
+        print(f"{Couleurs.ROUGE}Salle introuvable. L'événement sera créé sans salle.{Couleurs.RESET}")
+        input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
+        return ""
+
+    return salle
+
+def verifier_conflit_salle(dico, date, heure_debut, heure_fin, salle_id, evenement_id_exclu=None):
+    evenements = dico["evenements"]
+
+    if not salle_id:
+        return False 
+
+    for eid, evt in evenements.items():
+        if eid == evenement_id_exclu:
+            continue 
+        if evt.get("salle") == salle_id and evt["date"] == date:
+            if not (heure_fin <= evt["heure_debut"] or heure_debut >= evt["heure_fin"]):
+                return True
+
+    return False
+
+def verifier_occupation_max_salle(dico, evenement_id, nb_participants_a_ajouter=1):
+    evenements = dico["evenements"]
+    salles = dico["salles"]
+
+    if evenement_id not in evenements:
+        return False 
+
+    evt = evenements[evenement_id]
+    salle_id = evt.get("salle", "")
+
+    if not salle_id or salle_id not in salles:
+        return False 
+
+    capacite = salles[salle_id].get("capacite", None)
+    if capacite is None:
+        return False 
+
+    nb_actuels = len(evt["participants"])
+
+    return (nb_actuels + nb_participants_a_ajouter) > capacite
 
 
 def afficher_evenements_par_date(dico):

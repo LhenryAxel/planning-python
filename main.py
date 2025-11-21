@@ -25,7 +25,7 @@ def sauvegarder_donnees(donnees):
         json.dump(donnees, f, indent=4, ensure_ascii=False)
 
 
-# --- Codes couleurs ANSI ---
+# Codes couleurs ANSI 
 class Couleurs:
     RESET = '\033[0m'
     ROUGE = '\033[91m'
@@ -83,7 +83,7 @@ def ajouter_evenement(dico):
         input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour revenir au menu...{Couleurs.RESET}")
         return
 
-    # --- Création ---
+    # Création 
     evenement_id = str(len(evenements) + 1)
 
     evenements[evenement_id] = {
@@ -109,9 +109,7 @@ def verifier_conflit_participant(dico, nom, nouvel_evenement_id):
     debut = nouvel_evt["heure_debut"]
     fin = nouvel_evt["heure_fin"]
 
-    # On parcourt tous les événements existants
     for evt_id, evt in evenements.items():
-        # si le participant est inscrit à cet événement
         if nom in evt["participants"] and evt["date"] == date:
             # test de chevauchement horaire
             if not (fin <= evt["heure_debut"] or debut >= evt["heure_fin"]):
@@ -134,7 +132,7 @@ def ajouter_participant(dico):
     )
 
     if nom is None:
-        return  # retour au menu
+        return
 
     if not evenements:
         print(f"{Couleurs.ROUGE}Aucun événement n'est encore créé. Impossible d'ajouter un participant.{Couleurs.RESET}")
@@ -311,7 +309,7 @@ def afficher_participants_avec_pagination(dico, titre="Liste des participants", 
 def afficher_agenda(dico):
     # On boucle ici pour permettre de consulter plusieurs agendas d'affilée sans retourner au menu
     while True:
-        # On demande quel participant on veut voir (avec pagination si y'en a beaucoup)
+        # On demande quel participant on veut voir
         participant_nom = afficher_participants_avec_pagination(
             dico,
             titre="Affichage de l'agenda d'un participant",
@@ -924,7 +922,9 @@ def trouver_creneau_commun(dico):
                 print(f"{Couleurs.ROUGE}Choix invalide.{Couleurs.RESET}")
                 input(f"{Couleurs.JAUNE}Appuyez sur Entrée pour continuer...{Couleurs.RESET}")
 
-#helper
+
+# helpers
+
 def valider_date(date_str):
     try:
         datetime.datetime.strptime(date_str, "%Y-%m-%d")
